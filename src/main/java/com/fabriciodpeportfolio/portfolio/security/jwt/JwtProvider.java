@@ -8,10 +8,12 @@ import com.fabriciodpeportfolio.portfolio.security.model.PrincipalUser;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.SignatureException;
 import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.Keys;
+import java.util.Base64;
 import java.util.Date;
+import javax.crypto.SecretKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +37,13 @@ public class JwtProvider {
 
     public String generateToken(Authentication authentication) {
         PrincipalUser principalUser = (PrincipalUser) authentication.getPrincipal();
-        return Jwts.builder().setSubject(principalUser.getUsername()).setIssuedAt(new Date()).setExpiration(new Date(new Date().getTime() + expiration * 1000)).signWith(SignatureAlgorithm.HS512, secret).compact();
+        //return Jwts.builder().setSubject(principalUser.getUsername()).setIssuedAt(new Date()).setExpiration(new Date(new Date().getTime() + expiration * 1000)).signWith(SignatureAlgorithm.HS512, secret).compact();
+        return Jwts.builder().setSubject(principalUser.getUsername()).setIssuedAt(new Date()).setExpiration(new Date(new Date().getTime() + expiration * 1000)).signWith(generateKey()).compact();
+    }
+
+    public SecretKey generateKey() {
+        byte[] encodeKey = Base64.getDecoder().decode(secret);
+        return Keys.hmacShaKeyFor(encodeKey);
     }
 
     public String getUserNameFromToken(String token) {
